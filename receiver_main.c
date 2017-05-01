@@ -139,7 +139,7 @@ void reliablyReceive(unsigned short int myUDPport, char* destinationFile)
 			fclose(file);
 			exit(1);
 		}
-		debug_print("Sending ACK #%u\n", NFE-1);
+		debug_print("Sending ACK #%u:%u\n", NFE-1, seq_num);
 
 		if (last)
 		{

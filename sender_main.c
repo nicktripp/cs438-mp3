@@ -78,7 +78,7 @@ void * listenForAck(void * unused)
 		// GO-BACK-N
 		if (fACK == NAE)
 		{
-			debug_print("Accepted ACK #%u\n", fACK);
+			debug_print("Accepted ACK #%u:%u\n", fACK, seq_num);
 
 			// We've matched both frame # and seq_num; recompute RTT
 			if (seq_num == seq_nums[0])
@@ -114,7 +114,7 @@ void * listenForAck(void * unused)
 		}
 		else
 		{
-			debug_print("Rejected ACK #%u\n", fACK);
+			debug_print("Rejected ACK #%u:%u\n", fACK, seq_num);
 
 		}
 		pthread_mutex_unlock(&m);
@@ -339,7 +339,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 				memcpy(&frame, &sentBuff[i][0], sizeof(frame));
 				frame = ntohl(frame);
 
-				debug_print("Sending frame #%u:%u of size %d\n", NAE+i, frame, sentBuffSize[i]);
+				debug_print("Sending frame #%u:%u of size %d\n", frame, seq_nums[i], sentBuffSize[i]);
 				if (sentBuffSize[i] != bytesSent)
 				{
 					debug_print("Frame #%u: Expected send size of (%d) != actual send size of (%d)!\n", frame, sentBuffSize[i], bytesSent);
