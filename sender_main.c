@@ -118,8 +118,6 @@ void * listenForAck(void * unused)
 
 		}
 		pthread_mutex_unlock(&m);
-
-		pthread_cond_broadcast(&c);
 	}
 
 
@@ -289,11 +287,16 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 			if(last)
 				break;
 		}
-		pthread_mutex_unlock(&m);
 
+		// Wait for RTT / 2, for ACKs to come
+		struct timespec ts;
+		ts.tv_sec = 0;
+		if(RTT_MS >= 1000)
+			ts.tv_sec = RTT_MS / 1000 / 2;
+		ts.tv_nsec = (RTT_MS % 1000) * 1000 * 1000 / 2;
+		pthread_cond_timedwait(&c, &m, &ts);
 
 		// Send Frames in range(NAE, NAE+sws), if timestamp is expired
-		pthread_mutex_lock(&m);
 		for (int i = 0; i < sws; i++)
 		{
 			if (sentBuff[i] == NULL) // past Last frame; skip
@@ -367,11 +370,10 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 		// sendto(int socket, const void *buffer, size_t length, int flags, const struct sockaddr *dest_addr, socklen_t dest_len);
 
 		//HANG until woken up (by ACK or timer) NOTE: not necessary
-		struct timespec ts;
 		ts.tv_sec = 0;
 		if(RTT_MS >= 1000)
-			ts.tv_sec = RTT_MS / 1000;
-		ts.tv_nsec = (RTT_MS % 1000) * 1000 * 1000;
+			ts.tv_sec = RTT_MS / 1000 / 2;
+		ts.tv_nsec = (RTT_MS % 1000) * 1000 * 1000 / 2;
 		pthread_cond_timedwait(&c, &m, &ts);
 
 		pthread_mutex_unlock(&m);
