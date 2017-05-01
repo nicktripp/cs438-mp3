@@ -309,7 +309,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 			// Resend frame if timestamp expired
 			if (diff.tv_sec * 1000 + diff.tv_usec / 1000 > RTT_MS * 2 )
 			{
-				debug_print("Frame #%u:%u expired after %ldms\n", NAE+i, seq_nums[i], diff.tv_sec * 1000 + diff.tv_usec / 1000);
+				debug_print("Frame #%u:%u expired after %lds, %ldus\n", NAE+i, seq_nums[i], diff.tv_sec, diff.tv_usec);
 				int j = 0;
 				int bytesSent;
 				while ( -1 == (bytesSent = send(sock_fd, sentBuff[i], sentBuffSize[i], 0)) )
