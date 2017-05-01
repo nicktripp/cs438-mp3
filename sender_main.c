@@ -47,10 +47,12 @@ int RTT_MS;// Initial RTT = 100ms
 char ** sentBuff;
 int * sentBuffSize;
 struct timeval * sentStamp;
+uint32_t * seq_nums;
 unsigned long long int bytesTransferred;
 int sock_fd;
 uint32_t lastFrame;
 int lastACKed;
+float alpha = 0.2;
 
 
 // Listen for ACKs on another thread:
@@ -60,12 +62,17 @@ void * listenForAck(void * unused)
 	{
 		char buff[ACK_SIZE];
 		int bytesRecvd;
-		if(4 != (bytesRecvd = recv(sock_fd, buff, ACK_SIZE, 0)))
+		if(ACK_SIZE != (bytesRecvd = recv(sock_fd, buff, ACK_SIZE, 0)))
 			continue; // Error with receive, just loop again
 
 		uint32_t fACK;
+		uint32_t seq_num;
 		memcpy(&fACK, &buff[0], sizeof(fACK));
+		memcpy(&seq_num, &buff[0]+sizeof(fACK), sizeof(seq_num));
 		fACK = ntohl(fACK);
+
+		struct timeval now, diff;
+		gettimeofday(&now,0);
 
 		pthread_mutex_lock(&m);
 		// GO-BACK-N
@@ -73,20 +80,32 @@ void * listenForAck(void * unused)
 		{
 			debug_print("Accepted ACK #%u\n", fACK);
 
+			// We've matched both frame # and seq_num; recompute RTT
+			if (seq_num == seq_nums[0])
+			{
+				int old_rtt = RTT_MS;
+				timeval_subtract(&diff, &now, &sentStamp[0]);
+				float measured_ms = diff.tv_sec * 1000.0 + diff.tv_usec / 1000.0;
+				RTT_MS = alpha * measured_ms + (1-alpha) * RTT_MS;
+				debug_print("RTT changed from %dms to %dms\n", old_rtt, RTT_MS);
+			}
+
 			free(sentBuff[0]);
 			bytesTransferred += sentBuffSize[0];
 			// Shift window up:
 			for (int i = 1; i < sws; i++)
 			{
-				sentBuff[i-1] = sentBuff[i];
-				sentBuffSize[i-1] = sentBuffSize[i];
-				sentStamp[i-1] = sentStamp[i];
+				sentBuff[i-1] 		= sentBuff[i];
+				sentBuffSize[i-1] 	= sentBuffSize[i];
+				sentStamp[i-1]	 	= sentStamp[i];
+				seq_nums[i-1] 		= seq_nums[i];
 			}
 
 			// Clear new frame
 			sentBuff[sws-1] = NULL;
 			sentBuffSize[sws-1] = 0;
 			memset(&sentStamp[sws-1], 0, sizeof(struct timeval));// Change Timestamp
+			seq_nums[sws-1] = 0;
 
 			NAE++;
 
@@ -160,13 +179,16 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 	sws = 5; // Initial Send Window Size
 	NAE = 0; // Next ACK Expected
 	NFS = 0; // Next Frame to Send
-	RTT_MS = 500;// Initial RTT = 100ms
+	RTT_MS = 100;// Initial RTT = 100ms
 
 	sentBuff = malloc(sws * sizeof(char *));
 	sentBuffSize = malloc(sws * sizeof(int));
 	memset(sentBuffSize, 0, sws * sizeof(int));
 	sentStamp = malloc(sws * sizeof(struct timeval)); // Track the time of sent packet
 	memset(sentStamp, 0, sws * sizeof(struct timeval));
+	seq_nums = malloc(sws * sizeof(uint32_t)); // Track the number of retransmissions by packet
+	memset(seq_nums, 0, sws * sizeof(uint32_t));
+
 
 	lastFrame = -1;
 	lastACKed = 0;
@@ -210,8 +232,13 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 
 			uint32_t net_frame = htonl(frame);
 			// Add Header
-			memcpy(&sentBuff[frameIdx][0], &net_frame, sizeof(net_frame));
-			memcpy(&sentBuff[frameIdx][0]+sizeof(net_frame), &last, sizeof(last));
+			// 	- uint32_t frame #
+			//	- uint32_t seq_num
+			//  - char last
+
+			memcpy(&sentBuff[frameIdx][0], 												&net_frame, sizeof(net_frame));
+			memcpy(&sentBuff[frameIdx][0]+sizeof(net_frame), 							&seq_nums[frameIdx], sizeof(seq_nums[frameIdx]));
+			memcpy(&sentBuff[frameIdx][0]+sizeof(net_frame)+sizeof(seq_nums[frameIdx]), &last, sizeof(last));
 			int dataSize;
 			if (last)
 			{
@@ -222,11 +249,8 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 			else
 				dataSize = DATA_SIZE;
 
-			uint32_t frame2;
-			memcpy(&frame2, &sentBuff[frameIdx][0], sizeof(frame2));
-			frame2 = ntohl(frame2);
 
-			debug_print("Reading for frame #%u:%u:%u\n", frame, ntohl(net_frame), frame2);
+			debug_print("Reading for frame #%u\n", frame);
 
 			int readSize;
 			if (0 == (readSize = read(fileno(file), &sentBuff[frameIdx][0] + TRIPP_P_HEADER_SIZE, dataSize)))
@@ -245,6 +269,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 				free(sentBuff);
 				free(sentBuffSize);
 				free(sentStamp);
+				free(seq_nums);
 				close(sock_fd);
 				fclose(file);
 				exit(1);
@@ -257,6 +282,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 
 			sentBuffSize[frameIdx] = readSize + TRIPP_P_HEADER_SIZE;
 			memset(&sentStamp[frameIdx], 0, sizeof(struct timeval));// Change Timestamp
+			seq_nums[frameIdx] = 0;
 
 
 			if(last)
@@ -301,6 +327,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 						free(sentBuff);
 						free(sentBuffSize);
 						free(sentStamp);
+						free(seq_nums);
 						close(sock_fd);
 						fclose(file);
 						exit(1);
@@ -318,8 +345,9 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 					debug_print("Frame #%u: Expected send size of (%d) != actual send size of (%d)!\n", frame, sentBuffSize[i], bytesSent);
 				}
 
-				gettimeofday(&sentStamp[i], 0); // Track time sent packet
-				if (NFS == frame) // Advance NFS if need be
+				gettimeofday(&sentStamp[i], 0); 	// Track time sent packet
+				seq_nums[i]++; 						// Increment sequence number for this frame
+				if (NFS == frame) 					// Advance NFS if need be
 				{
 					NFS = frame + 1;
 					// debug_print("The next frame to send is %u\n", NFS);
@@ -346,6 +374,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 	free(sentBuff);
 	free(sentBuffSize);
 	free(sentStamp);
+	free(seq_nums);
 	close(sock_fd);
 	fclose(file);
 }

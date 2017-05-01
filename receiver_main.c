@@ -94,17 +94,19 @@ void reliablyReceive(unsigned short int myUDPport, char* destinationFile)
 			break;
 
 		// Check frame # recieved
-		uint32_t net_frame = 0;
+		uint32_t net_frame;
+		uint32_t seq_num;
 		char last;
 		memcpy(&net_frame, &frameBuff[0], sizeof(net_frame));
-		memcpy(&last, &frameBuff[0] + sizeof(net_frame), sizeof(last));
+		memcpy(&seq_num, &frameBuff[0]+sizeof(net_frame), sizeof(seq_num));
+		memcpy(&last, &frameBuff[0] + sizeof(net_frame) + sizeof(seq_num), sizeof(last));
 		uint32_t frame = ntohl(net_frame);
 
 
 		// GO-BACK-N
 		if (frame == NFE)
 		{
-			debug_print("Accepted frame #%u of size %d\n", frame, bytesRecvd);
+			debug_print("Accepted frame #%u:%u of size %d\n", frame, seq_num, bytesRecvd);
 
 			int bytesWritten;
 			if( -1 == (bytesWritten = write(fileno(file), frameBuff + TRIPP_P_HEADER_SIZE, bytesRecvd - TRIPP_P_HEADER_SIZE)) )
@@ -120,12 +122,17 @@ void reliablyReceive(unsigned short int myUDPport, char* destinationFile)
 		}
 		else
 		{
-			debug_print("Rejected frame #%u of size %d\n", frame, bytesRecvd);
+			debug_print("Rejected frame #%u:%u of size %d\n", frame, seq_num, bytesRecvd);
 		}
 
 		// Send ACK for NFE-1
+
+		char buff[ACK_SIZE];
 		uint32_t net_fACK = htonl(NFE-1);
-		if ( -1 == sendto(sock_fd, &net_fACK, ACK_SIZE, 0, (struct sockaddr *)&their_addr, addr_size) )
+		memcpy(&buff[0], &net_fACK, sizeof(net_fACK));
+		memcpy(&buff[0]+sizeof(net_fACK), &seq_num, sizeof(seq_num));
+
+		if ( -1 == sendto(sock_fd, &buff, ACK_SIZE, 0, (struct sockaddr *)&their_addr, addr_size) )
 		{
 			perror("sendto ack error: ");
 			close(sock_fd);
