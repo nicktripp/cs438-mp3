@@ -119,6 +119,7 @@ void * listenForAck(void * unused)
 		}
 		pthread_mutex_unlock(&m);
 
+		pthread_cond_broadcast(&c);
 	}
 
 
@@ -309,7 +310,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 			// Resend frame if timestamp expired
 			if (diff.tv_sec * 1000 + diff.tv_usec / 1000 > RTT_MS * 2 )
 			{
-				debug_print("Frame #%u:%u expired after %lds, %ldus\n", NAE+i, seq_nums[i], diff.tv_sec, diff.tv_usec);
+				debug_print("Frame #%u:%u expired after %lds, %ldus\n", NAE+i, seq_nums[i]-1, diff.tv_sec, diff.tv_usec);
 				int j = 0;
 				int bytesSent;
 				while ( -1 == (bytesSent = send(sock_fd, sentBuff[i], sentBuffSize[i], 0)) )
@@ -350,7 +351,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 				seq_nums[i]++; 						// Increment sequence number for this frame
 				if(seq_nums[i] > 1)					// We had to retrasnmit, so double RTT
 				{
-					debug_print("RTT doubled from %dms to %dms, from frame #%u:%u\n", RTT_MS, RTT_MS*2, frame, seq_nums[i]);
+					debug_print("RTT doubled from %dms to %dms, from frame #%u:%u\n", RTT_MS, RTT_MS*2, frame, seq_nums[i]-1);
 					RTT_MS = RTT_MS * 2;
 				}
 				if (NFS == frame) 					// Advance NFS if need be
@@ -361,11 +362,19 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 
 			}
 		}
-		pthread_mutex_unlock(&m);
 
 		// sendto(int socket, const void *buffer, size_t length, int flags, const struct sockaddr *dest_addr, socklen_t dest_len);
 
 		// HANG until woken up (by ACK or timer) NOTE: not necessary
+		struct timespec ts;
+		ts.tv_sec = 0;
+		if(RTT >= 1000)
+			ts.tv_sec = RTT / 1000;
+		ts.tv_nsec = (RTT % 1000) * 1000 * 1000;
+		pthread_cond_timedwait(&cond, &m, &ts);
+		pthread_mutex_unlock(&m);
+
+
 		if (!done)
 			done = bytesTransferred >= bytesToTransfer || lastACKed;
 	}
