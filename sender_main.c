@@ -221,7 +221,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 			else
 				dataSize = DATA_SIZE;
 
-			debug_print("Reading for frame #%u\n", frame);
+			debug_print("Reading for frame #%u:%u\n", frame, sentBuff[frameIdx][0]);
 
 			int readSize;
 			if (0 == (readSize = read(fileno(file), &sentBuff[frameIdx][0] + TRIPP_P_HEADER_SIZE, dataSize)))
