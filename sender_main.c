@@ -67,12 +67,12 @@ void * listenForAck(void * unused)
 		memcpy(&fACK, &buff[0], sizeof(fACK));
 		fACK = ntohl(fACK);
 
+		pthread_mutex_lock(&m);
 		// GO-BACK-N
 		if (fACK == NAE)
 		{
 			debug_print("Accepted ACK #%u\n", fACK);
 
-			pthread_mutex_lock(&m);
 			free(sentBuff[0]);
 			bytesTransferred += sentBuffSize[0];
 			// Shift window up:
@@ -92,13 +92,14 @@ void * listenForAck(void * unused)
 
 			if (lastFrame == fACK)
 				lastACKed = 1;
-			pthread_mutex_unlock(&m);
 		}
 		else
 		{
 			debug_print("Rejected ACK #%u\n", fACK);
 
 		}
+		pthread_mutex_unlock(&m);
+
 	}
 
 
@@ -312,7 +313,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 				uint32_t frame;
 				memcpy(&frame, &sentBuff[i][0], sizeof(frame));
 				frame = ntohl(frame);
-				
+
 				debug_print("Sending frame #%u:%u of size %d\n", NAE+i, frame, sentBuffSize[i]);
 				if (sentBuffSize[i] != bytesSent)
 				{
