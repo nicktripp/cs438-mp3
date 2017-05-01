@@ -278,12 +278,10 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 			gettimeofday(&now,0);
 			timeval_subtract(&diff, &now, &sentStamp[i]);
 
-			debug_print("Do we send frame #%d?\n", NAE+i);
+			// debug_print("Do we send frame #%d?\n", NAE+i);
 			// Resend frame if timestamp expired
 			if (diff.tv_sec > 0 || diff.tv_usec > (RTT_MS * 1000) )
 			{
-				debug_print("Preparing to send frame #%d!\n", NAE+i);
-
 				int j = 0;
 				int bytesSent;
 				while ( -1 == (bytesSent = send(sock_fd, sentBuff[i], sentBuffSize[i], 0)) )
@@ -307,7 +305,6 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 						exit(1);
 					}
 				}
-				debug_print("Still Preparing to send frame #%d!\n", NAE+i);
 
 				// Properly Sent
 				uint32_t frame;
@@ -324,7 +321,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 				if (NFS == frame) // Advance NFS if need be
 				{
 					NFS = frame + 1;
-					debug_print("The next frame to send is %u\n", NFS);
+					// debug_print("The next frame to send is %u\n", NFS);
 				}
 
 			}
