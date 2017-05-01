@@ -304,7 +304,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 
 				// Properly Sent
 				uint32_t frame;
-				memcpy(&frame, &sentBuff[frameIdx][0], sizeof(frame));
+				memcpy(&frame, &sentBuff[i][0], sizeof(frame));
 				frame = ntohl(frame);
 
 				debug_print("Sending frame #%u of size %d\n", frame, sentBuffSize[i]);
