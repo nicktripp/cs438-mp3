@@ -6,7 +6,7 @@
 #include <netdb.h>
 #include <unistd.h>
 
-#define DEBUG 1
+#define DEBUG 0
 #include "macros.h"
 
 void reliablyReceive(unsigned short int myUDPport, char* destinationFile)
