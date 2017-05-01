@@ -104,7 +104,7 @@ void * listenForAck(void * unused)
 			// Clear new frame
 			sentBuff[sws-1] = NULL;
 			sentBuffSize[sws-1] = 0;
-			memset(&sentStamp[sws-1], 0, sizeof(struct timeval));// Change Timestamp
+			memset(&sentStamp[sws-1], 0, sizeof(struct timeval));// Reset Timestamp
 			seq_nums[sws-1] = 0;
 
 			NAE++;
@@ -282,7 +282,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 			}
 
 			sentBuffSize[frameIdx] = readSize + TRIPP_P_HEADER_SIZE;
-			memset(&sentStamp[frameIdx], 0, sizeof(struct timeval));// Change Timestamp
+			memset(&sentStamp[frameIdx], 0, sizeof(struct timeval));// Reset Timestamp
 			seq_nums[frameIdx] = 0;
 
 
@@ -351,8 +351,9 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 				seq_nums[i]++; 						// Increment sequence number for this frame
 				if(seq_nums[i] > 1)					// We had to retrasnmit, so double RTT
 				{
-					debug_print("RTT doubled from %dms to %dms, from frame #%u:%u\n", RTT_MS, RTT_MS*2, frame, seq_nums[i]-1);
-					RTT_MS = RTT_MS * 2;
+					// ERROR: Something is wrong with this.
+					// debug_print("RTT doubled from %dms to %dms, from frame #%u:%u\n", RTT_MS, RTT_MS*2, frame, seq_nums[i]-1);
+					// RTT_MS = RTT_MS * 2;
 				}
 				if (NFS == frame) 					// Advance NFS if need be
 				{
@@ -365,7 +366,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 
 		// sendto(int socket, const void *buffer, size_t length, int flags, const struct sockaddr *dest_addr, socklen_t dest_len);
 
-		// HANG until woken up (by ACK or timer) NOTE: not necessary
+		HANG until woken up (by ACK or timer) NOTE: not necessary
 		struct timespec ts;
 		ts.tv_sec = 0;
 		if(RTT_MS >= 1000)
