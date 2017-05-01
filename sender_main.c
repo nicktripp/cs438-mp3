@@ -87,7 +87,7 @@ void * listenForAck(void * unused)
 				timeval_subtract(&diff, &now, &sentStamp[0]);
 				float measured_ms = diff.tv_sec * 1000.0 + diff.tv_usec / 1000.0;
 				RTT_MS = alpha * measured_ms + (1-alpha) * RTT_MS;
-				debug_print("RTT changed from %dms to %dms\n", old_rtt, RTT_MS);
+				debug_print("RTT changed from %dms to %dms, from frame #%u:%u\n", old_rtt, RTT_MS, fACK, seq_num);
 			}
 
 			free(sentBuff[0]);
