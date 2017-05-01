@@ -176,7 +176,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 
 
 
-	sws = 5; // Initial Send Window Size
+	sws = 15; // Initial Send Window Size
 	NAE = 0; // Next ACK Expected
 	NFS = 0; // Next Frame to Send
 	RTT_MS = 100;// Initial RTT = 100ms
@@ -347,6 +347,10 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 
 				gettimeofday(&sentStamp[i], 0); 	// Track time sent packet
 				seq_nums[i]++; 						// Increment sequence number for this frame
+				if(seq_nums[i] > 1)					// We had to retrasnmit, so double RTT
+				{
+					RTT_MS = RTT_MS * 2;
+				}
 				if (NFS == frame) 					// Advance NFS if need be
 				{
 					NFS = frame + 1;
