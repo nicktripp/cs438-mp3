@@ -81,7 +81,7 @@ void * listenForAck(void * unused)
 			debug_print("Accepted ACK #%u:%u\n", fACK, seq_num);
 
 			// We've matched both frame # and seq_num; recompute RTT
-			if (seq_num == seq_nums[0])
+			if (seq_num == seq_nums[0]-1)
 			{
 				int old_rtt = RTT_MS;
 				timeval_subtract(&diff, &now, &sentStamp[0]);
