@@ -307,7 +307,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 
 			// debug_print("Do we send frame #%d?\n", NAE+i);
 			// Resend frame if timestamp expired
-			if (diff.tv_sec > 0 || diff.tv_usec > (RTT_MS * 1000) )
+			if (diff.tv_sec * 1000 + diff.tv_usec / 1000 > RTT_MS * 2 )
 			{
 				int j = 0;
 				int bytesSent;
