@@ -366,13 +366,14 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 
 		// sendto(int socket, const void *buffer, size_t length, int flags, const struct sockaddr *dest_addr, socklen_t dest_len);
 
-		HANG until woken up (by ACK or timer) NOTE: not necessary
+		//HANG until woken up (by ACK or timer) NOTE: not necessary
 		struct timespec ts;
 		ts.tv_sec = 0;
 		if(RTT_MS >= 1000)
 			ts.tv_sec = RTT_MS / 1000;
 		ts.tv_nsec = (RTT_MS % 1000) * 1000 * 1000;
 		pthread_cond_timedwait(&c, &m, &ts);
+
 		pthread_mutex_unlock(&m);
 
 
