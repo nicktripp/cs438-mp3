@@ -6,12 +6,12 @@
 #include <netdb.h>
 #include <unistd.h>
 
-// #define DEBUG 1
+#define DEBUG 0
 #include "macros.h"
 
 void reliablyReceive(unsigned short int myUDPport, char* destinationFile)
 {
-
+	debug_print("\n\nTESTTESTTESTTESTTESTTEST%d\n\n", 0);
 	int sock_fd, new_fd;  // listen on sock_fd, new connection on new_fd
 	struct addrinfo hints, *res, *p;
 	int yes = 1;
