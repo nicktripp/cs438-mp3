@@ -271,7 +271,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 		{
 			if (sentBuff[i] == NULL) // past Last frame; skip
 			{
-				debug_print("NULL frame #%d\n", NAE+i);
+				// debug_print("NULL frame #%d\n", NAE+i);
 				break;
 			}
 			// Check if timestamp[i] is expired
