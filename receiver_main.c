@@ -11,7 +11,6 @@
 
 void reliablyReceive(unsigned short int myUDPport, char* destinationFile)
 {
-	debug_print("\n\nTESTTESTTESTTESTTESTTEST%d\n\n", 0);
 	int sock_fd, new_fd;  // listen on sock_fd, new connection on new_fd
 	struct addrinfo hints, *res, *p;
 	int yes = 1;
@@ -73,7 +72,6 @@ void reliablyReceive(unsigned short int myUDPport, char* destinationFile)
 		exit(1);
 	}
 
-	printf("server: waiting for connections...\n");
 	struct sockaddr_storage their_addr; // connector's address information
 	socklen_t addr_size = sizeof their_addr;
 

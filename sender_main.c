@@ -238,9 +238,9 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 				perror("read error: ");
 				pthread_mutex_destroy(&m);
 				pthread_cond_destroy(&c);
-				for(int i = 0; i < sws; i++)
-					if(sentBuff[i] != NULL)
-						free(sentBuff[i]);
+				for(int k = 0; k < sws; k++)
+					if(sentBuff[k] != NULL)
+						free(sentBuff[k]);
 				free(sentBuff);
 				free(sentBuffSize);
 				free(sentStamp);
@@ -284,21 +284,21 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 			{
 				debug_print("Preparing to send frame #%d!\n", NAE+i);
 
-				int i = 0;
+				int j = 0;
 				int bytesSent;
 				while ( -1 == (bytesSent = send(sock_fd, sentBuff[i], sentBuffSize[i], 0)) )
 				{
-					if (i < 10) // Try 10 times
-						i++;
+					if (j < 10) // Try 10 times
+						j++;
 					else // Error sending
 					{
 						pthread_mutex_unlock(&m);
 						perror("send error: ");
 						pthread_mutex_destroy(&m);
 						pthread_cond_destroy(&c);
-						for(int i = 0; i < sws; i++)
-							if(sentBuff[i] != NULL)
-								free(sentBuff[i]);
+						for(int k = 0; k < sws; k++)
+							if(sentBuff[k] != NULL)
+								free(sentBuff[k]);
 						free(sentBuff);
 						free(sentBuffSize);
 						free(sentStamp);
