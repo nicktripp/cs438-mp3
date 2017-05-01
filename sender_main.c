@@ -291,6 +291,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 						i++;
 					else // Error sending
 					{
+						pthread_mutex_unlock(&m);
 						perror("send error: ");
 						pthread_mutex_destroy(&m);
 						pthread_cond_destroy(&c);
@@ -305,6 +306,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 						exit(1);
 					}
 				}
+				debug_print("Still Preparing to send frame #%d!\n", NAE+i);
 
 				// Properly Sent
 				uint32_t frame;
