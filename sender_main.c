@@ -312,7 +312,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 				uint32_t frame;
 				memcpy(&frame, &sentBuff[i][0], sizeof(frame));
 				frame = ntohl(frame);
-
+				
 				debug_print("Sending frame #%u:%u of size %d\n", NAE+i, frame, sentBuffSize[i]);
 				if (sentBuffSize[i] != bytesSent)
 				{
