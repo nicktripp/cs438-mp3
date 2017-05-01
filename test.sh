@@ -7,6 +7,8 @@ sudo tc qdisc add dev eth0 parent 1:1 handle 10: tbf rate 100Mbit burst 40mb lat
 make clean
 make
 
+mkdir -p test
+
 ./reliable_receiver 12345 test/dracula.txt & ./reliable_sender 127.0.0.1 12345 data/dracula.txt 10000 &
 
 sleep 20

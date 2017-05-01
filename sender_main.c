@@ -39,7 +39,7 @@ int timeval_subtract (struct timeval * result, struct timeval * x, struct timeva
 
 
 
-
+// Seq_num
 uint32_t sws; //  Send Window Size
 uint32_t NAE; // Next ACK Expected
 uint32_t NFS; // Next Frame to Sent
@@ -156,7 +156,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 
 
 
-	sws = 1; // Initial Send Window Size
+	sws = 5; // Initial Send Window Size
 	NAE = 0; // Next ACK Expected
 	NFS = 0; // Next Frame to Send
 	RTT_MS = 500;// Initial RTT = 100ms
