@@ -371,7 +371,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 		if(RTT >= 1000)
 			ts.tv_sec = RTT / 1000;
 		ts.tv_nsec = (RTT % 1000) * 1000 * 1000;
-		pthread_cond_timedwait(&cond, &m, &ts);
+		pthread_cond_timedwait(&c, &m, &ts);
 		pthread_mutex_unlock(&m);
 
 
