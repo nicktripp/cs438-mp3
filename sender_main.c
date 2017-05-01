@@ -264,8 +264,10 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 		for (int i = 0; i < sws; i++)
 		{
 			if (sentBuff[i] == NULL) // past Last frame; skip
+			{
+				debug_print("NULL frame #%d\n", NAE+i);
 				break;
-
+			}
 			// Check if timestamp[i] is expired
 			struct timeval now, diff;
 			gettimeofday(&now,0);
@@ -274,7 +276,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 			// Resend frame if timestamp expired
 			if (diff.tv_sec > 0 || diff.tv_usec > (RTT_MS * 1000) )
 			{
-
+				
 				int i = 0;
 				int bytesSent;
 				while ( -1 == (bytesSent = send(sock_fd, sentBuff[i], sentBuffSize[i], 0)) )
