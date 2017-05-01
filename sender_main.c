@@ -349,6 +349,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 				seq_nums[i]++; 						// Increment sequence number for this frame
 				if(seq_nums[i] > 1)					// We had to retrasnmit, so double RTT
 				{
+					debug_print("RTT doubled from %dms to %dms, from frame #%u:%u\n", RTT_MS, RTT_MS*2, frame, seq_nums[i]);
 					RTT_MS = RTT_MS * 2;
 				}
 				if (NFS == frame) 					// Advance NFS if need be
