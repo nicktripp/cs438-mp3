@@ -273,10 +273,12 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 			gettimeofday(&now,0);
 			timeval_subtract(&diff, &now, &sentStamp[i]);
 
+			debug_print("Do we send frame#%d?\n", NAE+i);
 			// Resend frame if timestamp expired
 			if (diff.tv_sec > 0 || diff.tv_usec > (RTT_MS * 1000) )
 			{
-				
+				debug_print("Preparing to send frame#%d!\n", NAE+i);
+
 				int i = 0;
 				int bytesSent;
 				while ( -1 == (bytesSent = send(sock_fd, sentBuff[i], sentBuffSize[i], 0)) )
