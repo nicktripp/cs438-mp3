@@ -368,9 +368,9 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 		// HANG until woken up (by ACK or timer) NOTE: not necessary
 		struct timespec ts;
 		ts.tv_sec = 0;
-		if(RTT >= 1000)
-			ts.tv_sec = RTT / 1000;
-		ts.tv_nsec = (RTT % 1000) * 1000 * 1000;
+		if(RTT_MS >= 1000)
+			ts.tv_sec = RTT_MS / 1000;
+		ts.tv_nsec = (RTT_MS % 1000) * 1000 * 1000;
 		pthread_cond_timedwait(&c, &m, &ts);
 		pthread_mutex_unlock(&m);
 
